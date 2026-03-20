@@ -1,13 +1,12 @@
-fastapi
-uvicorn
 langchain
 langchain-community
 langchain-openai
-langchain-postgres==0.0.9
+langchain-qdrant
 langchain-text-splitters
-psycopg[binary]
-pgvector
+qdrant-client
 tiktoken
 python-dotenv
 pydantic
+fastapi
+uvicorn
 beautifulsoup4

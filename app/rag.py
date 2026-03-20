@@ -1,26 +1,27 @@
 import os
-from langchain_postgres.vectorstores import PGVector
+from langchain_qdrant import QdrantVectorStore
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
+from qdrant_client import QdrantClient
 
-CONNECTION_STRING = os.getenv(
-    "POSTGRES_CONNECTION_STRING",
-    "postgresql+psycopg://rag_user:rag_password@db:5432/rag_db",  # 'db' = docker-compose service name
-)
+QDRANT_PATH = os.getenv("QDRANT_PATH", "./app/qdrant_db")
 COLLECTION_NAME = "rag_docs"
 
 
 def build_rag_chain():
-    print("Connecting to pgvector...")
-    vectorstore = PGVector(
-        embeddings=OpenAIEmbeddings(),
+    print("Loading Qdrant vectorstore...")
+
+    embeddings = OpenAIEmbeddings()
+    client = QdrantClient(path=QDRANT_PATH)
+
+    vectorstore = QdrantVectorStore(
+        client=client,
         collection_name=COLLECTION_NAME,
-        connection=CONNECTION_STRING,
-        async_mode=False,
+        embedding=embeddings,
     )
-    print("Connected to pgvector successfully!")
+    print("Qdrant loaded successfully!")
 
     retriever = vectorstore.as_retriever()
 
@@ -28,14 +29,12 @@ def build_rag_chain():
         [
             (
                 "human",
-                """You are an assistant for question-answering tasks. 
-                     Use the following pieces of retrieved context to answer the question. 
-                     If you don't know the answer, just say that you don't know. 
-                     Use three sentences maximum and keep the answer concise.
+                """You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question.
+            If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise.
 
-          Question: {question} 
-          Context: {context} 
-          Answer:""",
+            Question: {question}
+            Context: {context}
+            Answer:""",
             )
         ]
     )

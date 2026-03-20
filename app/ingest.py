@@ -3,15 +3,14 @@ import os
 from dotenv import load_dotenv
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import WebBaseLoader
-from langchain_community.vectorstores import PGVector
+from langchain_qdrant import QdrantVectorStore
 from langchain_openai import OpenAIEmbeddings
+from qdrant_client import QdrantClient
+from qdrant_client.models import Distance, VectorParams
 
 load_dotenv()
 
-CONNECTION_STRING = os.getenv(
-    "POSTGRES_CONNECTION_STRING",
-    "postgresql+psycopg://rag_user:rag_password@localhost:5433/rag_db",  # ← localhost
-)
+QDRANT_PATH = "./app/qdrant_db"
 COLLECTION_NAME = "rag_docs"
 
 
@@ -33,15 +32,28 @@ def ingest():
     splits = text_splitter.split_documents(docs)
     print(f"Created {len(splits)} chunks")
 
-    print("Embedding and saving to pgvector...")
-    vectorstore = PGVector.from_documents(
-        documents=splits,
-        embedding=OpenAIEmbeddings(),
+    print("Embedding and saving to Qdrant...")
+    embeddings = OpenAIEmbeddings()
+
+    # Create local persistent client
+    client = QdrantClient(path=QDRANT_PATH)
+
+    # Create collection
+    client.recreate_collection(
         collection_name=COLLECTION_NAME,
-        connection_string=CONNECTION_STRING,
-        pre_delete_collection=True,  # clears old data before re-indexing
+        vectors_config=VectorParams(
+            size=1536,  # OpenAI text-embedding-ada-002 dimension
+            distance=Distance.COSINE,
+        ),
     )
-    print(f"Saved {len(splits)} vectors to PostgreSQL collection '{COLLECTION_NAME}'")
+
+    vectorstore = QdrantVectorStore(
+        client=client,
+        collection_name=COLLECTION_NAME,
+        embedding=embeddings,
+    )
+    vectorstore.add_documents(splits)
+    print(f"Saved {len(splits)} vectors to Qdrant")
     print("Ingestion complete!")
 
 
