@@ -219,14 +219,14 @@ Re-run ingestion when you want to:
 ┌─────────────────────────────────────────┐
 │  ingest.py (run once locally)           │
 │                                         │
-│  Web Page → Split → Embed → ChromaDB   │
+│  Web Page → Split → Embed → ChromaDB    │
 └─────────────────┬───────────────────────┘
                   │ chroma_db/ volume
 ┌─────────────────▼───────────────────────┐
 │  Docker Container (FastAPI)             │
 │                                         │
-│  Startup: load ChromaDB (2-3 seconds)  │
-│  Request: retrieve → prompt → LLM      │
+│  Startup: load ChromaDB (2-3 seconds)   │
+│  Request: retrieve → prompt → LLM       │
 └─────────────────────────────────────────┘
 ```
 
