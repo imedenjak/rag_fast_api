@@ -2,11 +2,14 @@ import os
 from langchain_qdrant import QdrantVectorStore
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
+
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+
+# from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
 from qdrant_client import QdrantClient
 
-QDRANT_PATH = os.getenv("QDRANT_PATH", "./app/qdrant_db")
+QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 COLLECTION_NAME = "rag_docs"
 
 
@@ -14,7 +17,8 @@ def build_rag_chain():
     print("Loading Qdrant vectorstore...")
 
     embeddings = OpenAIEmbeddings()
-    client = QdrantClient(path=QDRANT_PATH)
+    # embeddings = OllamaEmbeddings(model="llama3.2")
+    client = QdrantClient(url=QDRANT_URL)
 
     vectorstore = QdrantVectorStore(
         client=client,
@@ -40,6 +44,7 @@ def build_rag_chain():
     )
 
     llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
+    # llm = ChatOllama(model="llama3.2", temperature=0)
 
     def format_docs(docs):
         return "\n\n".join(doc.page_content for doc in docs)
