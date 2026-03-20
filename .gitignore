@@ -1,0 +1,67 @@
+# Environment variables — NEVER commit secrets
+.env
+.env.local
+.env.secret
+.env.production
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+ENV/
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# ChromaDB — vector store data (can be large)
+chroma_db/
+*.chroma
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Docker
+.dockerignore
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# MyPy
+.mypy_cache/
