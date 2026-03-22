@@ -16,7 +16,7 @@ The agent:
 - **LangChain** — RAG pipeline orchestration
 - **LangGraph** — Stateful agent with grading and retry logic
 - **Qdrant** — Persistent local vector store
-- **OpenAI** — Embeddings (text-embedding-ada-002) + LLM (GPT-3.5-turbo)
+- **OpenAI** — Configurable embeddings + chat models via environment variables
 - **Streamlit** — Chat UI
 - **Docker** — Containerization
 
@@ -53,7 +53,7 @@ User Question
  grounded? ──YES──► END
      │
      NO
-     └──────────► [generate] retry
+     └──────────► [rewrite_question] → [retrieve] → [generate]
 ```
 
 ## Prerequisites
@@ -79,6 +79,14 @@ cp .env.example .env
 
 # Edit .env and add your OpenAI API key
 OPENAI_API_KEY=sk-xxx
+```
+
+Optional model settings:
+
+```bash
+OPENAI_CHAT_MODEL=gpt-4o-mini
+OPENAI_QUERY_MODEL=gpt-4o-mini
+OPENAI_EMBEDDING_MODEL=text-embedding-3-small
 ```
 
 ### 3. Install dependencies locally
@@ -188,12 +196,17 @@ python ingest.py
 
 | Variable            | Required     | Description                                  |
 |---------------------|--------------|----------------------------------------------|
-| `OPENAI_API_KEY`    | ✅ Yes       | Your OpenAI API key                          |
-| `QDRANT_URL`        | ❌ No        | Qdrant URL (default: http://localhost:6333)  |
-| `LANGSMITH_TRACING` | ❌ No        | Enable LangSmith tracing (default: false)    |
-| `LANGSMITH_API_KEY` | ❌ No        | LangSmith API key (only if tracing enabled)  |
-| `LANGSMITH_ENDPOINT`| ❌ No        | LangSmith endpoint URL                       |
-| `LANGSMITH_PROJECT` | ❌ No        | LangSmith project name                       |
+| `OPENAI_API_KEY`             | ✅ Yes | Your OpenAI API key |
+| `OPENAI_CHAT_MODEL`          | ❌ No  | Chat model for generation, grading, and rewriting |
+| `OPENAI_QUERY_MODEL`         | ❌ No  | Model used to generate retrieval query variants |
+| `OPENAI_EMBEDDING_MODEL`     | ❌ No  | Embedding model used for ingestion and retrieval |
+| `OPENAI_EMBEDDING_DIMENSIONS`| ❌ No  | Override vector size if you use a custom embedding model |
+| `QDRANT_URL`                 | ❌ No  | Qdrant URL (default: `http://localhost:6333`) |
+| `QDRANT_COLLECTION_NAME`     | ❌ No  | Qdrant collection name (default: `rag_docs`) |
+| `LANGSMITH_TRACING`          | ❌ No  | Enable LangSmith tracing (default: false) |
+| `LANGSMITH_API_KEY`          | ❌ No  | LangSmith API key (only if tracing enabled) |
+| `LANGSMITH_ENDPOINT`         | ❌ No  | LangSmith endpoint URL |
+| `LANGSMITH_PROJECT`          | ❌ No  | LangSmith project name |
 
 ## Architecture
 
@@ -219,6 +232,7 @@ python ingest.py
 ## Notes
 
 - `@st.cache_resource` builds the agent once — not on every user interaction.
-- OpenAI embeddings use `text-embedding-ada-002` with **1536 dimensions**.
+- OpenAI model choices are configured with env vars instead of being hardcoded in the app.
+- Re-ingestion is required after changing the embedding model because the Qdrant vector size must match the stored embeddings.
 - The agent retries generation if the answer is not grounded in retrieved context.
 - Re-ingestion required when switching embedding models — dimensions must match.

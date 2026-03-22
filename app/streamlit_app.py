@@ -33,8 +33,19 @@ if question := st.chat_input("Ask a question..."):
     # Run agent
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            result = agent.invoke({"question": question})
+            result = agent.invoke(
+                {"question": question, "rewritten_question": "", "retry_count": 0, "max_retries": 1}
+            )
             answer = result["answer"]
             st.write(answer)
+
+            documents = result.get("documents", [])
+            if documents:
+                with st.expander("Sources"):
+                    for index, doc in enumerate(documents, start=1):
+                        source = doc.metadata.get("source", "Unknown source")
+                        chunk = doc.page_content.strip().replace("\n", " ")
+                        st.markdown(f"**{index}. {source}**")
+                        st.write(chunk[:400] + ("..." if len(chunk) > 400 else ""))
 
     st.session_state.messages.append({"role": "assistant", "content": answer})

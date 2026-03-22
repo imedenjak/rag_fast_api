@@ -9,10 +9,14 @@ from langchain_openai import OpenAIEmbeddings
 # from langchain_ollama import OllamaEmbeddings
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams
+from config import (
+    COLLECTION_NAME,
+    OPENAI_EMBEDDING_MODEL,
+    QDRANT_URL,
+    get_embedding_dimensions,
+)
 
 load_dotenv()
-
-COLLECTION_NAME = "rag_docs"
 
 
 def ingest():
@@ -35,11 +39,11 @@ def ingest():
     print(f"Created {len(splits)} chunks")
 
     print("Embedding and saving to Qdrant...")
-    embeddings = OpenAIEmbeddings()
+    embeddings = OpenAIEmbeddings(model=OPENAI_EMBEDDING_MODEL)
     # embeddings = OllamaEmbeddings(model="llama3.2")
 
     # Create local persistent client
-    client = QdrantClient(url="http://localhost:6333")
+    client = QdrantClient(url=QDRANT_URL)
 
     # Check if collection already exists
     if client.collection_exists(COLLECTION_NAME):
@@ -49,8 +53,7 @@ def ingest():
     client.create_collection(
         collection_name=COLLECTION_NAME,
         vectors_config=VectorParams(
-            size=1536,  # OpenAI text-embedding-ada-002 dimension
-            # size=3072,  # llama3.2 dimension
+            size=get_embedding_dimensions(),
             distance=Distance.COSINE,
         ),
     )

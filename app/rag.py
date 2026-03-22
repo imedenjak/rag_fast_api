@@ -1,4 +1,3 @@
-import os
 from langchain_qdrant import QdrantVectorStore
 from langchain_core.output_parsers import StrOutputParser
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
@@ -8,9 +7,12 @@ from langchain_core.prompts import ChatPromptTemplate
 from qdrant_client import QdrantClient
 
 from langchain_core.load import dumps, loads
-
-QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
-COLLECTION_NAME = "rag_docs"
+from config import (
+    COLLECTION_NAME,
+    OPENAI_EMBEDDING_MODEL,
+    OPENAI_QUERY_MODEL,
+    QDRANT_URL,
+)
 
 
 def get_unique_union(documents: list[list]):
@@ -58,7 +60,7 @@ def build_retrieval_chain():
     """Returns just the retrieval chain for agent use"""
 
     client = QdrantClient(url=QDRANT_URL)
-    embeddings = OpenAIEmbeddings()
+    embeddings = OpenAIEmbeddings(model=OPENAI_EMBEDDING_MODEL)
 
     vectorstore = QdrantVectorStore(
         client=client,
@@ -78,7 +80,7 @@ Provide these alternative questions separated by newlines. Original question: {q
 
     generate_queries = (
         prompt_perspective
-        | ChatOpenAI(temperature=0)
+        | ChatOpenAI(model=OPENAI_QUERY_MODEL, temperature=0)
         | StrOutputParser()
         | (lambda x: x.split("\n"))
     )
