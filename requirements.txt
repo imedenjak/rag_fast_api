@@ -1,13 +1,13 @@
+streamlit
 langchain
 langchain-community
 langchain-openai
 langchain-ollama
 langchain-qdrant
 langchain-text-splitters
+langgraph
 qdrant-client
 tiktoken
 python-dotenv
 pydantic
-fastapi
-uvicorn
 beautifulsoup4

@@ -1,8 +1,6 @@
 import os
 from langchain_qdrant import QdrantVectorStore
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnablePassthrough
-
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 # from langchain_ollama import ChatOllama, OllamaEmbeddings
@@ -56,58 +54,37 @@ def reciprocal_rank_fusion(results: list[list], k=60):
     return reranked_results
 
 
-def build_rag_chain():
-    print("Loading Qdrant vectorstore...")
+def build_retrieval_chain():
+    """Returns just the retrieval chain for agent use"""
 
-    embeddings = OpenAIEmbeddings()
-    # embeddings = OllamaEmbeddings(model="llama3.2")
     client = QdrantClient(url=QDRANT_URL)
+    embeddings = OpenAIEmbeddings()
 
     vectorstore = QdrantVectorStore(
         client=client,
         collection_name=COLLECTION_NAME,
         embedding=embeddings,
     )
-    print("Qdrant loaded successfully!")
-
     retriever = vectorstore.as_retriever()
 
-    # RAG-Fusion: Related
-    template = """You are a helpful assistant that generates multiple search queries based on a single input query. \n
-Generate multiple search queries related to: {question} \n
-Output (4 queries):"""
+    # Define prompt_perspectives here
+    template = """You are an AI language model assistant. Your task is to generate five 
+different versions of the given user question to retrieve relevant documents from a vector 
+database. By generating multiple perspectives on the user question, your goal is to help
+the user overcome some of the limitations of the distance-based similarity search. 
+Provide these alternative questions separated by newlines. Original question: {question}"""
 
-    prompt_rag_fusion = ChatPromptTemplate.from_template(template)
+    prompt_perspective = ChatPromptTemplate.from_template(template)
 
     generate_queries = (
-        prompt_rag_fusion
+        prompt_perspective
         | ChatOpenAI(temperature=0)
         | StrOutputParser()
         | (lambda x: x.split("\n"))
     )
 
-    retrieval_chain_rag_fusion = generate_queries | retriever.map() | reciprocal_rank_fusion
-
-    # RAG
-    template = template = """Answer the following question based on this context:
-
-{context}
-
-Question: {question}
-"""
-    prompt = ChatPromptTemplate.from_template(template)
-
-    llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
-    # llm = ChatOllama(model="llama3.2", temperature=0)
-
-    # def format_docs(docs):
-    #     return "\n\n".join(doc.page_content for doc in docs)
-
-    final_rag_chain = (
-        {"context": retrieval_chain_rag_fusion, "question": RunnablePassthrough()}
-        | prompt
-        | llm
-        | StrOutputParser()
+    retrieval_chain_rag_fusion = (
+        generate_queries | retriever.map() | reciprocal_rank_fusion
     )
 
-    return final_rag_chain
+    return retrieval_chain_rag_fusion
