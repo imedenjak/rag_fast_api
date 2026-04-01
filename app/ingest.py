@@ -6,6 +6,7 @@ Drops and recreates the collection on every run.
 Usage:
     python -m app.ingest https://example.com/page1 https://example.com/page2
 """
+
 import argparse
 
 import bs4
@@ -66,7 +67,9 @@ def ingest(urls: list[str]) -> None:
         collection_name=COLLECTION_NAME,
         vectors_config=VectorParams(size=dims, distance=Distance.COSINE),
     )
-    logger.info("ingest.collection_created", collection=COLLECTION_NAME, dimensions=dims)
+    logger.info(
+        "ingest.collection_created", collection=COLLECTION_NAME, dimensions=dims
+    )
 
     embeddings = OpenAIEmbeddings(model=OPENAI_EMBEDDING_MODEL)
     vectorstore = QdrantVectorStore(
@@ -74,7 +77,11 @@ def ingest(urls: list[str]) -> None:
         collection_name=COLLECTION_NAME,
         embedding=embeddings,
     )
-    splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=50)
+    splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+        model=OPENAI_EMBEDDING_MODEL,
+        chunk_size=400,  # 400 tokens, not characters
+        chunk_overlap=50,
+    )
 
     total_chunks = 0
     for url in urls:
@@ -95,7 +102,9 @@ def ingest(urls: list[str]) -> None:
 if __name__ == "__main__":
     configure_logging()
 
-    parser = argparse.ArgumentParser(description="Ingest web pages into the RAG vector store.")
+    parser = argparse.ArgumentParser(
+        description="Ingest web pages into the RAG vector store."
+    )
     parser.add_argument("urls", nargs="+", help="One or more URLs to ingest")
     args = parser.parse_args()
 
