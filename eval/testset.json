@@ -1,0 +1,14 @@
+[
+  {
+    "question": "What is a ReAct agent?",
+    "ground_truth": "A ReAct agent interleaves reasoning and acting steps, generating both thoughts and actions in an alternating fashion to solve tasks."
+  },
+  {
+    "question": "What are the limitations of LLM agents?",
+    "ground_truth": "LLM agents face limitations including finite context length, difficulty in long-term planning, hallucination, and lack of reliable memory."
+  },
+  {
+    "question": "What is chain-of-thought prompting?",
+    "ground_truth": "Chain-of-thought prompting encourages the model to produce intermediate reasoning steps before giving a final answer, improving performance on complex tasks."
+  }
+]

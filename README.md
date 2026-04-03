@@ -19,17 +19,21 @@ The agent generates multiple query variants, retrieves documents using reciproca
 ```
 adaptive_rag/
 ├── app/
-│   ├── __init__.py       # makes app a Python package
-│   ├── agent.py          # LangGraph agent — retrieve, generate, grade, retry
-│   ├── config.py         # env-based configuration
-│   ├── ingest.py         # build Qdrant index (run once)
-│   ├── rag.py            # multi-query + reciprocal rank fusion
-│   └── streamlit_app.py  # Streamlit chat UI
-├── .env                  # API keys (never commit)
-├── .env.example          # template
-├── requirements.txt      # pip dependencies
-├── pyproject.toml        # package metadata for LangGraph Studio
-├── langgraph.json        # LangGraph Studio config
+│   ├── __init__.py         # makes app a Python package
+│   ├── agent.py            # LangGraph agent — retrieve, generate, grade, retry
+│   ├── chat_history.py     # SQLite-backed persistent chat history
+│   ├── config.py           # env-based configuration
+│   ├── ingest.py           # build Qdrant index (run once)
+│   ├── logging_config.py   # structured logging (dev/json)
+│   ├── rag.py              # multi-query + reciprocal rank fusion
+│   └── streamlit_app.py    # Streamlit chat UI
+├── eval/
+│   ├── testset.json        # small evaluation dataset
+│   └── evaluate.py         # RAGAS evaluation script
+├── .env                    # API keys (never commit)
+├── .env.example            # template
+├── pyproject.toml          # dependencies and package metadata
+├── langgraph.json          # LangGraph Studio config
 ├── Dockerfile
 ├── docker-compose.yml
 └── README.md
@@ -75,11 +79,7 @@ cp .env.example .env
 ### 2. Install dependencies
 
 ```bash
-python -m venv venv
-.\venv\Scripts\Activate.ps1   # Windows
-source venv/bin/activate       # Linux / Mac
-
-pip install -r requirements.txt
+uv sync
 ```
 
 ### 3. Start Qdrant and ingest documents
@@ -118,7 +118,7 @@ Open `http://localhost:8501`.
 ## LangGraph Studio (browser)
 
 ```bash
-pip install langgraph-cli
+uv add langgraph-cli
 langgraph dev
 ```
 
@@ -139,8 +139,43 @@ Open: `https://smith.langchain.com/studio/?baseUrl=http://127.0.0.1:2024`
 | `LANGCHAIN_API_KEY`          | No       | —                        | LangSmith API key                                |
 | `LANGCHAIN_PROJECT`          | No       | —                        | LangSmith project name                           |
 
+## RAGAS Evaluation
+
+The `eval/` folder contains a small test set and an evaluation script that measures pipeline quality using [RAGAS](https://docs.ragas.io) — no human-labelled answers required.
+
+**Metrics:**
+
+| Metric | What it measures |
+|---|---|
+| **Answer Relevancy** | Is the answer about the question asked? |
+| **Faithfulness** | Is every claim in the answer supported by retrieved chunks? |
+| **Context Precision** | Are the retrieved chunks relevant to the question? |
+| **Context Recall** | Does the retrieved context cover the reference answer? |
+
+**Run evaluation:**
+
+```bash
+docker compose exec app python -m eval.evaluate
+```
+
+Results are printed to stdout and saved to `eval/results.json`.
+
+**Interpreting scores** (all metrics are 0–1):
+- `≥ 0.8` — good
+- `0.5–0.8` — room for improvement
+- `< 0.5` — investigate retrieval or generation quality
+
+## Persistent Chat History
+
+Chat history is stored in a SQLite database inside a named Docker volume (`chat_data`), so it survives container restarts. To inspect it:
+
+```bash
+docker compose exec app sqlite3 /data/chat_history.db "SELECT * FROM messages;"
+```
+
 ## Notes
 
-- Re-run `python -m app.ingest` after changing the source URL, chunk settings, or embedding model.
+- Re-run `docker compose exec app python -m app.ingest <url>` after changing source URLs, chunk settings, or embedding model.
 - Switching embedding models requires deleting the Qdrant collection first — vector dimensions must match.
 - `@st.cache_resource` ensures the agent graph is built once per Streamlit session.
+- Use `docker compose down -v` to also remove the chat history volume.

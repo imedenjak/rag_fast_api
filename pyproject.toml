@@ -2,6 +2,7 @@
 name = "adaptive-rag"
 version = "0.1.0"
 dependencies = [
+    "streamlit",
     "langchain",
     "langchain-community",
     "langchain-openai",
@@ -14,7 +15,8 @@ dependencies = [
     "python-dotenv",
     "pydantic",
     "beautifulsoup4",
-    "pathlib>=1.0.1",
+    "structlog",
+    "ragas",
 ]
 
 [tool.setuptools.packages.find]
