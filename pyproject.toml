@@ -17,6 +17,7 @@ dependencies = [
     "beautifulsoup4",
     "structlog",
     "ragas",
+    "langgraph-cli[inmem]>=0.4.19",
 ]
 
 [tool.setuptools.packages.find]
