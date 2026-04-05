@@ -10,5 +10,45 @@
   {
     "question": "What is chain-of-thought prompting?",
     "ground_truth": "Chain-of-thought prompting encourages the model to produce intermediate reasoning steps before giving a final answer, improving performance on complex tasks."
+  },
+  {
+    "question": "What does MRKL stand for?",
+    "ground_truth": "MRKL stands for Modular Reasoning, Knowledge and Language. It is a neuro-symbolic architecture for autonomous agents containing a collection of expert modules routed by a general-purpose LLM."
+  },
+  {
+    "question": "Which paper introduced Tree of Thoughts?",
+    "ground_truth": "Tree of Thoughts was introduced by Yao et al. 2023 (arXiv 2305.10601). It extends chain-of-thought by exploring multiple reasoning possibilities at each step, creating a tree structure searched via BFS or DFS."
+  },
+  {
+    "question": "What core data structure does ANNOY use?",
+    "ground_truth": "ANNOY uses random projection trees as its core data structure — a set of binary trees where each non-leaf node represents a hyperplane splitting the input space in half and each leaf stores one data point."
+  },
+  {
+    "question": "What is the capacity of short-term memory according to Miller 1956?",
+    "ground_truth": "According to Miller 1956, short-term memory has a capacity of about 7 items and lasts for 20-30 seconds."
+  },
+  {
+    "question": "What does FAISS stand for?",
+    "ground_truth": "FAISS stands for Facebook AI Similarity Search. It applies vector quantization by partitioning the vector space into clusters and refining quantization within clusters for fast similarity search."
+  },
+  {
+    "question": "Which framework uses ChatGPT as a task planner to select HuggingFace models?",
+    "ground_truth": "HuggingGPT is the framework that uses ChatGPT as a task planner to select models available on the HuggingFace platform according to model descriptions and summarize responses based on execution results."
+  },
+  {
+    "question": "What intermediate interface does LLM+P use for long-horizon planning?",
+    "ground_truth": "LLM+P uses the Planning Domain Definition Language (PDDL) as an intermediate interface. The LLM translates the problem into Problem PDDL, a classical planner generates a PDDL plan, and the LLM translates it back into natural language."
+  },
+  {
+    "question": "How many expert-designed tools does ChemCrow use?",
+    "ground_truth": "ChemCrow uses 13 expert-designed tools to accomplish tasks across organic synthesis, drug discovery, and materials design."
+  },
+  {
+    "question": "What does HNSW stand for?",
+    "ground_truth": "HNSW stands for Hierarchical Navigable Small World. It builds hierarchical layers of small-world graphs where the bottom layers contain actual data points and upper layers create shortcuts to speed up search."
+  },
+  {
+    "question": "How many annotated dialogues and API calls does API-Bank contain?",
+    "ground_truth": "API-Bank contains 264 annotated dialogues involving 568 API calls, along with 53 commonly used API tools for evaluating tool-augmented LLMs."
   }
 ]

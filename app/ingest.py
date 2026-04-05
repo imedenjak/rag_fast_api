@@ -4,7 +4,7 @@ Document ingestion pipeline.
 Drops and recreates the collection on every run.
 
 Usage:
-    python -m app.ingest https://example.com/page1 https://example.com/page2
+    python -m app.ingest https://example.com/page1 https://example.com/page2 https://lilianweng.github.io/posts/2023-06-23-agent/
 """
 
 import argparse
@@ -14,15 +14,21 @@ import structlog
 from dotenv import load_dotenv
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_openai import OpenAIEmbeddings
-from langchain_qdrant import QdrantVectorStore
+from langchain_qdrant import FastEmbedSparse, QdrantVectorStore, RetrievalMode
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams
+from qdrant_client.models import (
+    Distance,
+    SparseIndexParams,
+    SparseVectorParams,
+    VectorParams,
+)
 
 try:
     from .config import (
         COLLECTION_NAME,
         OPENAI_EMBEDDING_MODEL,
+        FAST_EMBED_SPARSE,
         QDRANT_URL,
         get_embedding_dimensions,
     )
@@ -31,6 +37,7 @@ except ImportError:
     from config import (  # noqa: E402
         COLLECTION_NAME,
         OPENAI_EMBEDDING_MODEL,
+        FAST_EMBED_SPARSE,
         QDRANT_URL,
         get_embedding_dimensions,
     )
@@ -65,17 +72,28 @@ def ingest(urls: list[str]) -> None:
     dims = get_embedding_dimensions()
     client.create_collection(
         collection_name=COLLECTION_NAME,
-        vectors_config=VectorParams(size=dims, distance=Distance.COSINE),
+        vectors_config={
+            "dense": VectorParams(size=dims, distance=Distance.COSINE),
+        },
+        sparse_vectors_config={
+            "sparse": SparseVectorParams(index=SparseIndexParams(on_disk=False))
+        },
     )
     logger.info(
         "ingest.collection_created", collection=COLLECTION_NAME, dimensions=dims
     )
 
     embeddings = OpenAIEmbeddings(model=OPENAI_EMBEDDING_MODEL)
+    sparse_embeddings = FastEmbedSparse(model=FAST_EMBED_SPARSE)
+
     vectorstore = QdrantVectorStore(
         client=client,
         collection_name=COLLECTION_NAME,
         embedding=embeddings,
+        sparse_embedding=sparse_embeddings,
+        retrieval_mode=RetrievalMode.HYBRID,
+        vector_name="dense",
+        sparse_vector_name="sparse",
     )
     splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
         chunk_size=400,  # 400 tokens, not characters

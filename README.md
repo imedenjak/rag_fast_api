@@ -2,13 +2,14 @@
 
 A Retrieval-Augmented Generation (RAG) agent built with LangChain, LangGraph, Qdrant, and Streamlit.
 
-The agent generates multiple query variants, retrieves documents using reciprocal rank fusion, generates an answer, grades it for hallucinations, and retries with a rewritten question if the answer is not grounded.
+The agent generates multiple query variants, retrieves documents using hybrid search (dense + sparse) with reciprocal rank fusion, generates an answer, grades it for hallucinations, and retries with a rewritten question if the answer is not grounded.
 
 ## Tech Stack
 
 - **LangGraph** — stateful agent with grading and retry logic
 - **LangChain** — RAG pipeline orchestration
-- **Qdrant** — persistent vector store
+- **Qdrant** — persistent vector store with hybrid search (dense + sparse)
+- **FastEmbed** — local sparse (BM25) embeddings for keyword matching
 - **OpenAI** — configurable embeddings and chat models
 - **Streamlit** — chat UI
 - **LangSmith** — tracing and observability
@@ -23,9 +24,10 @@ adaptive_rag/
 │   ├── agent.py            # LangGraph agent — retrieve, generate, grade, retry
 │   ├── chat_history.py     # SQLite-backed persistent chat history
 │   ├── config.py           # env-based configuration
+│   ├── check.py            # verify Qdrant collection vector config
 │   ├── ingest.py           # build Qdrant index (run once)
 │   ├── logging_config.py   # structured logging (dev/json)
-│   ├── rag.py              # multi-query + reciprocal rank fusion
+│   ├── rag.py              # multi-query + hybrid search + reciprocal rank fusion
 │   └── streamlit_app.py    # Streamlit chat UI
 ├── eval/
 │   ├── testset.json        # small evaluation dataset
@@ -44,7 +46,7 @@ adaptive_rag/
 ```
 User Question
       ↓
-[retrieve]       multi-query generation + reciprocal rank fusion
+[retrieve]       multi-query generation + hybrid search (dense + sparse) + reciprocal rank fusion
       ↓
 [generate]       answer from retrieved context
       ↓
@@ -133,6 +135,7 @@ Open: `https://smith.langchain.com/studio/?baseUrl=http://127.0.0.1:2024`
 | `OPENAI_QUERY_MODEL`         | No       | same as chat model       | Model for generating query variants              |
 | `OPENAI_EMBEDDING_MODEL`     | No       | `text-embedding-3-small` | Embedding model                                  |
 | `OPENAI_EMBEDDING_DIMENSIONS`| No       | auto-detected            | Override vector size for custom embedding models |
+| `FAST_EMBED_SPARSE`          | No       | `Qdrant/bm25`            | FastEmbed sparse model for keyword matching      |
 | `QDRANT_URL`                 | No       | `http://localhost:6333`  | Qdrant server URL                                |
 | `QDRANT_COLLECTION_NAME`     | No       | `rag_docs`               | Qdrant collection name                           |
 | `LANGCHAIN_TRACING_V2`       | No       | `false`                  | Enable LangSmith tracing                         |
@@ -177,5 +180,6 @@ docker compose exec app sqlite3 /data/chat_history.db "SELECT * FROM messages;"
 
 - Re-run `docker compose exec app python -m app.ingest <url>` after changing source URLs, chunk settings, or embedding model.
 - Switching embedding models requires deleting the Qdrant collection first — vector dimensions must match.
+- Run `python app/check.py` to verify the Qdrant collection has both dense and sparse vectors configured correctly.
 - `@st.cache_resource` ensures the agent graph is built once per Streamlit session.
 - Use `docker compose down -v` to also remove the chat history volume.

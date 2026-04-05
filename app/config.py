@@ -10,9 +10,8 @@ COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "rag_docs")
 
 OPENAI_CHAT_MODEL = os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini")
 OPENAI_QUERY_MODEL = os.getenv("OPENAI_QUERY_MODEL", OPENAI_CHAT_MODEL)
-OPENAI_EMBEDDING_MODEL = os.getenv(
-    "OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"
-)
+OPENAI_EMBEDDING_MODEL = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
+FAST_EMBED_SPARSE = os.getenv("FAST_EMBED_SPARSE", "Qdrant/bm25")
 
 _KNOWN_EMBEDDING_DIMENSIONS = {
     "text-embedding-ada-002": 1536,

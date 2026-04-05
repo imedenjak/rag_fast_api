@@ -1,5 +1,5 @@
 import structlog
-from langchain_qdrant import QdrantVectorStore
+from langchain_qdrant import FastEmbedSparse, QdrantVectorStore, RetrievalMode
 from langchain_core.output_parsers import StrOutputParser
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
@@ -11,6 +11,7 @@ from langchain_core.load import dumps, loads
 from .config import (
     COLLECTION_NAME,
     OPENAI_EMBEDDING_MODEL,
+    FAST_EMBED_SPARSE,
     OPENAI_QUERY_MODEL,
     QDRANT_URL,
 )
@@ -55,12 +56,18 @@ def build_retrieval_chain():
         "retrieval_chain.build", qdrant_url=QDRANT_URL, collection=COLLECTION_NAME
     )
     client = QdrantClient(url=QDRANT_URL)
+
     embeddings = OpenAIEmbeddings(model=OPENAI_EMBEDDING_MODEL)
+    sparse_embeddings = FastEmbedSparse(model=FAST_EMBED_SPARSE)
 
     vectorstore = QdrantVectorStore(
         client=client,
         collection_name=COLLECTION_NAME,
         embedding=embeddings,
+        sparse_embedding=sparse_embeddings,
+        retrieval_mode=RetrievalMode.HYBRID,
+        vector_name="dense",
+        sparse_vector_name="sparse",
     )
     retriever = vectorstore.as_retriever()
 
