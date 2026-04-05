@@ -84,7 +84,7 @@ def ingest(urls: list[str]) -> None:
     )
 
     embeddings = OpenAIEmbeddings(model=OPENAI_EMBEDDING_MODEL)
-    sparse_embeddings = FastEmbedSparse(model=FAST_EMBED_SPARSE)
+    sparse_embeddings = FastEmbedSparse(model_name=FAST_EMBED_SPARSE)
 
     vectorstore = QdrantVectorStore(
         client=client,

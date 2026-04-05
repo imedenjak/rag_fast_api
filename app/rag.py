@@ -35,8 +35,6 @@ def reciprocal_rank_fusion(results: list[list], k=60):
             # If the document is not yet in the fused_scores dictionary, add it with an initial score of 0
             if doc_str not in fused_scores:
                 fused_scores[doc_str] = 0
-            # Retrieve the current score of the document, if any
-            fused_scores[doc_str]
             # Update the score of the document using the RRF formula: 1 / (rank + k)
             fused_scores[doc_str] += 1 / (rank + k)
 
@@ -58,7 +56,7 @@ def build_retrieval_chain():
     client = QdrantClient(url=QDRANT_URL)
 
     embeddings = OpenAIEmbeddings(model=OPENAI_EMBEDDING_MODEL)
-    sparse_embeddings = FastEmbedSparse(model=FAST_EMBED_SPARSE)
+    sparse_embeddings = FastEmbedSparse(model_name=FAST_EMBED_SPARSE)
 
     vectorstore = QdrantVectorStore(
         client=client,
